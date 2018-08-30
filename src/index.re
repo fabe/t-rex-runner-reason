@@ -4,12 +4,14 @@ type stateT = {
   playerY: float,
   playerVY: float,
   debris: list((float, float)),
+  offsetX: float
 };
 
 let playerX = 50.;
-let playerHeight = 50.;
-let gravity = 500.;
+let playerHeight = 30.;
+let gravity = 400.;
 let floorY = 200.;
+let speed = 100.;
 
 let setup = env => {
   Env.size(~width=800, ~height=300, env);
@@ -17,10 +19,11 @@ let setup = env => {
     playerY: floorY,
     playerVY: 0.,
     debris: [(200., 50.), (400., 30.), (600., 40.)],
+    offsetX: 0.
   };
 };
 
-let draw = ({playerY, playerVY, debris} as state, env) => {
+let draw = ({playerY, playerVY, debris, offsetX} as state, env) => {
   /* Background */
   Draw.background(Utils.color(~r=199, ~g=217, ~b=229, ~a=255), env);
 
@@ -47,7 +50,7 @@ let draw = ({playerY, playerVY, debris} as state, env) => {
   List.iter(
     ((x, height)) =>
       Draw.rectf(
-        ~pos=(x, floorY -. height +. playerHeight),
+        ~pos=(x -. offsetX, floorY -. height +. playerHeight),
         ~width=20.,
         ~height,
         env
@@ -55,15 +58,18 @@ let draw = ({playerY, playerVY, debris} as state, env) => {
     debris
   );
 
+  let deltaTime = Env.deltaTime(env);
+
   {
     ...state,
-    playerY: min(playerY +. playerVY *. Env.deltaTime(env), floorY),
+    playerY: min(playerY +. playerVY *. 2. *. deltaTime, floorY),
     playerVY:
-      if (Env.keyPressed(Space, env)) {
+      if (Env.keyPressed(Space, env) && playerY === floorY) {
         (-200.);
       } else {
-        playerVY +. gravity *. Env.deltaTime(env);
-      }
+        playerVY +. gravity *. deltaTime;
+      },
+    offsetX: offsetX +. speed *. deltaTime
   };
 };
 
