@@ -26,9 +26,9 @@ Tsdl@bsansouci/tsdl:
   dependencies:
     sdl2 bsansouci/SDL-mirror#fast
 
-bs-platform@bsansouci/bsb-native#2.1.1:
-  version "2.1.1"
-  resolved "https://codeload.github.com/bsansouci/bsb-native/tar.gz/d76155b709dba032cdb11e99ebe0e2c37bcb2c85"
+bs-platform@bsansouci/bsb-native#3.2.0:
+  version "3.2.0"
+  resolved "https://codeload.github.com/bsansouci/bsb-native/tar.gz/84604c9f6a5611eed68372efdb575c00a3e72813"
   dependencies:
     yauzl "^2.9.1"
 
