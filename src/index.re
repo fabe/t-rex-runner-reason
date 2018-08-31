@@ -16,19 +16,44 @@ let playerX = 50.;
 let playerHeight = 30.;
 let gravity = 400.;
 let floorY = 200.;
-let speed = 100.;
+let speed = 200.;
 let debrisWidth = 20.;
+
+let generateSingleDebris = x => (
+  x +. Utils.randomf(~min=200., ~max=400.),
+  Utils.randomf(~min=30., ~max=50.),
+);
+
+let generateInitialDebris = () => [
+  generateSingleDebris(200.),
+  generateSingleDebris(400.),
+  generateSingleDebris(600.),
+  generateSingleDebris(800.),
+];
 
 let setup = env => {
   Env.size(~width=800, ~height=300, env);
   {
     playerY: floorY,
     playerVY: 0.,
-    debris: [(200., 50.), (400., 30.), (600., 40.)],
+    debris: generateInitialDebris(),
     offsetX: 0.,
     running: Running,
   };
 };
+
+let generateNewDebris = ({debris, offsetX}) =>
+  List.map(
+    ((x, _) as d) =>
+      if (x -. offsetX +. debrisWidth <= 0.) {
+        let newX =
+          List.fold_left((maxX, (x, _)) => max(maxX, x), 0., debris);
+        generateSingleDebris(newX);
+      } else {
+        d;
+      },
+    debris,
+  );
 
 let draw = ({playerY, playerVY, debris, offsetX, running} as state, env) => {
   /* Background */
@@ -80,11 +105,12 @@ let draw = ({playerY, playerVY, debris, offsetX, running} as state, env) => {
       debris,
     );
 
+  let debris = generateNewDebris(state);
   let deltaTime = Env.deltaTime(env);
 
   switch (running) {
   | Running => {
-      ...state,
+      debris,
       playerY: min(playerY +. playerVY *. 2. *. deltaTime, floorY),
       playerVY:
         Env.keyPressed(Space, env) && playerY === floorY ?
@@ -95,7 +121,7 @@ let draw = ({playerY, playerVY, debris, offsetX, running} as state, env) => {
   | Restart =>
     if (Env.keyPressed(Space, env)) {
       {
-        ...state,
+        debris: generateInitialDebris(),
         playerY: floorY,
         playerVY: 0.,
         offsetX: 0.,
