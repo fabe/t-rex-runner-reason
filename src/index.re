@@ -115,7 +115,7 @@ let draw =
   let (floorTextureOffsetLeft, floorTextureOffsetRight) = floorTextureOffset;
   Draw.subImagef(
     sprite,
-    ~pos=(0. -. floorTextureOffsetLeft, floorY +. playerHeight -. 20.),
+    ~pos=(0. -. floorTextureOffsetLeft, floorY +. playerHeight -. 15.),
     ~width=floorTextureWidth,
     ~height=26. /. 2.,
     ~texPos=(2, 104),
@@ -125,7 +125,10 @@ let draw =
   );
   Draw.subImagef(
     sprite,
-    ~pos=(0. +. floorTextureWidth -. floorTextureOffsetRight, floorY +. playerHeight -. 20.),
+    ~pos=(
+      0. +. floorTextureWidth -. floorTextureOffsetRight,
+      floorY +. playerHeight -. 15.,
+    ),
     ~width=floorTextureWidth,
     ~height=26. /. 2.,
     ~texPos=(2, 104),
@@ -219,7 +222,29 @@ let draw =
     drawIdlePlayer();
   };
 
-  /* 88x94 1678, y: 2*/
+  if (running === Restart) {
+    Draw.subImagef(
+      sprite,
+      ~pos=(float_of_int(Env.width(env)) /. 2. -. 381. /. 4., 80.),
+      ~width=381. /. 2.,
+      ~height=21. /. 2.,
+      ~texPos=(1294, 29),
+      ~texWidth=381,
+      ~texHeight=21,
+      env,
+    );
+
+    Draw.subImagef(
+      sprite,
+      ~pos=(float_of_int(Env.width(env)) /. 2. -. 72. /. 4., 115.),
+      ~width=72. /. 2.,
+      ~height=64. /. 2.,
+      ~texPos=(2, 2),
+      ~texWidth=72,
+      ~texHeight=64,
+      env,
+    );
+  };
 
   /* Collision detection */
   let collided =
@@ -256,9 +281,9 @@ let draw =
   let debris = generateNewDebris(state);
   let deltaTime = Env.deltaTime(env);
 
+  /* Draw score */
+  Draw.scale(~x=0.5, ~y=0.5, env);
   Draw.text(~body=string_of_int(score), ~pos=(5, 5), env);
-
-  print_endline(string_of_int(int_of_float(floorTextureOffsetRight)));
 
   switch (running) {
   | Running => {
@@ -272,13 +297,15 @@ let draw =
       running: collided ? Restart : Running,
       score: int_of_float(offsetX) / 4,
       floorTextureOffset: (
-        int_of_float(floorTextureOffsetLeft) >= int_of_float(floorTextureWidth)
-          ? floorTextureWidth *. -1.
-          : floorTextureOffsetLeft +. speed *. deltaTime,
-        int_of_float(floorTextureOffsetRight) >= int_of_float(floorTextureWidth) * 2
-          ? 0.
-          : floorTextureOffsetRight +. speed *. deltaTime
-      )
+        int_of_float(floorTextureOffsetLeft)
+        >= int_of_float(floorTextureWidth) ?
+          floorTextureWidth *. (-1.) :
+          floorTextureOffsetLeft +. speed *. deltaTime,
+        int_of_float(floorTextureOffsetRight)
+        >= int_of_float(floorTextureWidth)
+        * 2 ?
+          0. : floorTextureOffsetRight +. speed *. deltaTime,
+      ),
     }
   | Restart =>
     if (Env.keyPressed(Space, env)) {
@@ -290,7 +317,7 @@ let draw =
         offsetX: 0.,
         running: Running,
         score: 0,
-        floorTextureOffset: (0., 0.)
+        floorTextureOffset: (0., 0.),
       };
     } else {
       state;
