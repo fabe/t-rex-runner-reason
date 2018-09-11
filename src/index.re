@@ -13,6 +13,7 @@ type stateT = {
   sprite: imageT,
   score: int,
   speed: float,
+  floorTextureOffset: (float, float),
 };
 
 type anatomyT = {
@@ -27,6 +28,7 @@ let playerWidth = 44.;
 let gravity = 500.;
 let floorY = 200.;
 let debrisWidth = 17.;
+let floorTextureWidth = 2400.;
 
 /* Get all collision boxes/coordinates for the player */
 let getPlayerCollisionBoxes = playerY => [
@@ -46,9 +48,9 @@ let generateSingleDebris = x => (
 
 let generateInitialDebris = () => [
   generateSingleDebris(200.),
-  generateSingleDebris(400.),
   generateSingleDebris(600.),
-  generateSingleDebris(800.),
+  generateSingleDebris(1100.),
+  generateSingleDebris(1600.),
 ];
 
 let setup = env => {
@@ -62,6 +64,7 @@ let setup = env => {
     sprite: Draw.loadImage(~filename="assets/sprite.png", ~isPixel=true, env),
     score: 0,
     speed: 200.,
+    floorTextureOffset: (0., 0.),
   };
 };
 
@@ -84,7 +87,17 @@ let generateNewDebris = ({debris, offsetX, speed}) =>
 
 let draw =
     (
-      {sprite, playerY, playerVY, debris, offsetX, running, score, speed} as state,
+      {
+        sprite,
+        playerY,
+        playerVY,
+        debris,
+        offsetX,
+        running,
+        score,
+        speed,
+        floorTextureOffset,
+      } as state,
       env,
     ) => {
   /* Background */
@@ -98,13 +111,25 @@ let draw =
     ~height=float_of_int(Env.height(env)) -. floorY,
     env,
   );
+
+  let (floorTextureOffsetLeft, floorTextureOffsetRight) = floorTextureOffset;
   Draw.subImagef(
     sprite,
-    ~pos=(0., floorY +. playerHeight -. 20.),
-    ~width=2400. /. 2.,
+    ~pos=(0. -. floorTextureOffsetLeft, floorY +. playerHeight -. 20.),
+    ~width=floorTextureWidth,
     ~height=26. /. 2.,
     ~texPos=(2, 104),
-    ~texWidth=2400,
+    ~texWidth=int_of_float(floorTextureWidth),
+    ~texHeight=26,
+    env,
+  );
+  Draw.subImagef(
+    sprite,
+    ~pos=(0. +. floorTextureWidth -. floorTextureOffsetRight, floorY +. playerHeight -. 20.),
+    ~width=floorTextureWidth,
+    ~height=26. /. 2.,
+    ~texPos=(2, 104),
+    ~texWidth=int_of_float(floorTextureWidth),
     ~texHeight=26,
     env,
   );
@@ -233,6 +258,8 @@ let draw =
 
   Draw.text(~body=string_of_int(score), ~pos=(5, 5), env);
 
+  print_endline(string_of_int(int_of_float(floorTextureOffsetRight)));
+
   switch (running) {
   | Running => {
       ...state,
@@ -243,7 +270,15 @@ let draw =
           (-200.) : playerVY +. gravity *. deltaTime,
       offsetX: offsetX +. speed *. deltaTime,
       running: collided ? Restart : Running,
-      score: score + 1,
+      score: int_of_float(offsetX) / 4,
+      floorTextureOffset: (
+        int_of_float(floorTextureOffsetLeft) >= int_of_float(floorTextureWidth)
+          ? floorTextureWidth *. -1.
+          : floorTextureOffsetLeft +. speed *. deltaTime,
+        int_of_float(floorTextureOffsetRight) >= int_of_float(floorTextureWidth) * 2
+          ? 0.
+          : floorTextureOffsetRight +. speed *. deltaTime
+      )
     }
   | Restart =>
     if (Env.keyPressed(Space, env)) {
@@ -255,6 +290,7 @@ let draw =
         offsetX: 0.,
         running: Running,
         score: 0,
+        floorTextureOffset: (0., 0.)
       };
     } else {
       state;
