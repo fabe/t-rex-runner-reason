@@ -14,6 +14,7 @@ type stateT = {
   score: int,
   speed: float,
   floorTextureOffset: (float, float),
+  clouds: list((float, float)),
 };
 
 type anatomyT = {
@@ -25,7 +26,7 @@ type anatomyT = {
 let playerX = 50.;
 let playerHeight = 47.;
 let playerWidth = 44.;
-let gravity = 500.;
+let gravity = 600.;
 let floorY = 200.;
 let debrisWidth = 17.;
 let floorTextureWidth = 2400.;
@@ -63,8 +64,9 @@ let setup = env => {
     running: Running,
     sprite: Draw.loadImage(~filename="assets/sprite.png", ~isPixel=true, env),
     score: 0,
-    speed: 200.,
+    speed: 300.,
     floorTextureOffset: (0., 0.),
+    clouds: [(500., 20.), (600., 30.), (800., 30.)],
   };
 };
 
@@ -85,6 +87,28 @@ let generateNewDebris = ({debris, offsetX, speed}) =>
     debris,
   );
 
+let generateSingleCloud = x => (
+  x +. Utils.randomf(~min=200., ~max=800.),
+  Utils.randomf(~min=80., ~max=140.),
+);
+
+let generateNewClouds = ({clouds, offsetX, speed}) =>
+  List.map(
+    ((x, _) as d) =>
+      if (x -. offsetX /. 4. +. 92. <= 0.) {
+        let newX =
+          List.fold_left(
+            (maxX, (x, _)) => max(maxX, x +. speed /. 1000.),
+            0.,
+            clouds,
+          );
+        generateSingleCloud(newX);
+      } else {
+        d;
+      },
+    clouds,
+  );
+
 let draw =
     (
       {
@@ -97,6 +121,7 @@ let draw =
         score,
         speed,
         floorTextureOffset,
+        clouds,
       } as state,
       env,
     ) => {
@@ -160,6 +185,22 @@ let draw =
       );
     },
     debris,
+  );
+
+  /* Clouds */
+  List.iter(
+    ((x, y)) =>
+      Draw.subImagef(
+        sprite,
+        ~pos=(x -. offsetX /. 4., y),
+        ~width=92. /. 2.,
+        ~height=27. /. 2.,
+        ~texPos=(166, 2),
+        ~texWidth=92,
+        ~texHeight=27,
+        env,
+      ),
+    clouds,
   );
 
   /* Player */
@@ -306,6 +347,7 @@ let draw =
         * 2 ?
           0. : floorTextureOffsetRight +. speed *. deltaTime,
       ),
+      clouds: generateNewClouds(state),
     }
   | Restart =>
     if (Env.keyPressed(Space, env)) {
@@ -318,6 +360,7 @@ let draw =
         running: Running,
         score: 0,
         floorTextureOffset: (0., 0.),
+        clouds: [(200., 80.), (600., 100.)],
       };
     } else {
       state;
