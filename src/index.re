@@ -11,15 +11,33 @@ type stateT = {
   offsetX: float,
   running: runningT,
   sprite: imageT,
+  score: int,
+  speed: float,
+};
+
+type anatomyT = {
+  width: float,
+  height: float,
+  pos: (float, float),
 };
 
 let playerX = 50.;
 let playerHeight = 47.;
 let playerWidth = 44.;
-let gravity = 400.;
+let gravity = 500.;
 let floorY = 200.;
-let speed = 200.;
 let debrisWidth = 17.;
+
+/* Get all collision boxes/coordinates for the player */
+let getPlayerCollisionBoxes = playerY => [
+  {
+    pos: (playerX +. 20., playerY),
+    width: playerWidth -. 20.,
+    height: playerHeight -. 27.,
+  },
+  {pos: (playerX +. 10., playerY +. 30.), width: 20., height: 17.},
+  {pos: (playerX, playerY +. 15.), width: playerWidth -. 8., height: 15.},
+];
 
 let generateSingleDebris = x => (
   x +. Utils.randomf(~min=200., ~max=400.),
@@ -42,15 +60,21 @@ let setup = env => {
     offsetX: 0.,
     running: Running,
     sprite: Draw.loadImage(~filename="assets/sprite.png", ~isPixel=true, env),
+    score: 0,
+    speed: 200.,
   };
 };
 
-let generateNewDebris = ({debris, offsetX}) =>
+let generateNewDebris = ({debris, offsetX, speed}) =>
   List.map(
     ((x, _) as d) =>
       if (x -. offsetX +. debrisWidth <= 0.) {
         let newX =
-          List.fold_left((maxX, (x, _)) => max(maxX, x), 0., debris);
+          List.fold_left(
+            (maxX, (x, _)) => max(maxX, x +. speed /. 1000.),
+            0.,
+            debris,
+          );
         generateSingleDebris(newX);
       } else {
         d;
@@ -59,7 +83,10 @@ let generateNewDebris = ({debris, offsetX}) =>
   );
 
 let draw =
-    ({sprite, playerY, playerVY, debris, offsetX, running} as state, env) => {
+    (
+      {sprite, playerY, playerVY, debris, offsetX, running, score, speed} as state,
+      env,
+    ) => {
   /* Background */
   Draw.background(Utils.color(~r=246, ~g=246, ~b=246, ~a=255), env);
 
@@ -108,13 +135,6 @@ let draw =
   );
 
   /* Player */
-  Draw.fill(Utils.color(~r=0, ~g=0, ~b=0, ~a=0), env);
-  Draw.rectf(
-    ~pos=(playerX, playerY),
-    ~width=playerWidth,
-    ~height=playerHeight,
-    env,
-  );
   Draw.subImagef(
     sprite,
     ~pos=(playerX, playerY),
@@ -131,20 +151,39 @@ let draw =
   /* Collision detection */
   let collided =
     List.exists(
-      ((x, height)) =>
-        Utils.intersectRectRect(
-          ~rect1Pos=(x -. offsetX, floorY -. height +. playerHeight),
-          ~rect1W=debrisWidth,
-          ~rect1H=height,
-          ~rect2Pos=(playerX, playerY),
-          ~rect2W=playerHeight,
-          ~rect2H=playerHeight,
+      (anatomy: anatomyT) =>
+        List.exists(
+          ((x, height)) =>
+            Utils.intersectRectRect(
+              ~rect1Pos=(x -. offsetX, floorY -. height +. playerHeight),
+              ~rect1W=debrisWidth,
+              ~rect1H=height,
+              ~rect2Pos=anatomy.pos,
+              ~rect2W=anatomy.width,
+              ~rect2H=anatomy.height,
+            ),
+          debris,
         ),
-      debris,
+      getPlayerCollisionBoxes(playerY),
     );
+
+  /* Draw collision boxes */
+  Draw.fill(Utils.color(~r=0, ~g=255, ~b=0, ~a=0), env);
+  List.iter(
+    (anatomy: anatomyT) =>
+      Draw.rectf(
+        ~pos=anatomy.pos,
+        ~width=anatomy.width,
+        ~height=anatomy.height,
+        env,
+      ),
+    getPlayerCollisionBoxes(playerY),
+  );
 
   let debris = generateNewDebris(state);
   let deltaTime = Env.deltaTime(env);
+
+  Draw.text(~body=string_of_int(score), ~pos=(5, 5), env);
 
   switch (running) {
   | Running => {
@@ -156,6 +195,7 @@ let draw =
           (-200.) : playerVY +. gravity *. deltaTime,
       offsetX: offsetX +. speed *. deltaTime,
       running: collided ? Restart : Running,
+      score: score + 1,
     }
   | Restart =>
     if (Env.keyPressed(Space, env)) {
@@ -166,6 +206,7 @@ let draw =
         playerVY: 0.,
         offsetX: 0.,
         running: Running,
+        score: 0,
       };
     } else {
       state;
