@@ -324,7 +324,7 @@ let draw =
 
   /* Draw score */
   Draw.scale(~x=0.5, ~y=0.5, env);
-  Draw.text(~body=string_of_int(score), ~pos=(5, 5), env);
+  Draw.text(~body=string_of_int(score), ~pos=(20, 20), env);
 
   switch (running) {
   | Running => {
@@ -336,7 +336,7 @@ let draw =
           (-200.) : playerVY +. gravity *. deltaTime,
       offsetX: offsetX +. speed *. deltaTime,
       running: collided ? Restart : Running,
-      score: int_of_float(offsetX) / 4,
+      score: int_of_float(offsetX) / 25,
       floorTextureOffset: (
         int_of_float(floorTextureOffsetLeft)
         >= int_of_float(floorTextureWidth) ?
