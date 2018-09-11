@@ -135,16 +135,64 @@ let draw =
   );
 
   /* Player */
-  Draw.subImagef(
-    sprite,
-    ~pos=(playerX, playerY),
-    ~width=playerWidth,
-    ~height=playerHeight,
-    ~texPos=(1678, 2),
-    ~texWidth=88,
-    ~texHeight=94,
-    env,
-  );
+  let drawRunningPlayer = () =>
+    switch (int_of_float(offsetX /. 15.) mod 2) {
+    | 0 =>
+      Draw.subImagef(
+        sprite,
+        ~pos=(playerX, playerY),
+        ~width=playerWidth,
+        ~height=playerHeight,
+        ~texPos=(1678 + 88 * 3, 2),
+        ~texWidth=88,
+        ~texHeight=94,
+        env,
+      )
+    | 1 =>
+      Draw.subImagef(
+        sprite,
+        ~pos=(playerX, playerY),
+        ~width=playerWidth,
+        ~height=playerHeight,
+        ~texPos=(1678 + 88 * 2, 2),
+        ~texWidth=88,
+        ~texHeight=94,
+        env,
+      )
+    | _ => assert(false)
+    };
+
+  let drawIdlePlayer = () =>
+    Draw.subImagef(
+      sprite,
+      ~pos=(playerX, playerY),
+      ~width=playerWidth,
+      ~height=playerHeight,
+      ~texPos=(1678, 2),
+      ~texWidth=88,
+      ~texHeight=94,
+      env,
+    );
+
+  let drawDeadPlayer = () =>
+    Draw.subImagef(
+      sprite,
+      ~pos=(playerX, playerY),
+      ~width=playerWidth,
+      ~height=playerHeight,
+      ~texPos=(1678 + 88 * 4, 2),
+      ~texWidth=88,
+      ~texHeight=94,
+      env,
+    );
+
+  if (playerY === floorY && running === Running) {
+    drawRunningPlayer();
+  } else if (running === Restart) {
+    drawDeadPlayer();
+  } else {
+    drawIdlePlayer();
+  };
 
   /* 88x94 1678, y: 2*/
 
