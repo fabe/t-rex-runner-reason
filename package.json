@@ -7,7 +7,7 @@
     "build:web": "bsb -make-world -backend js",
     "build:native": "bsb -make-world -backend native",
     "clean": "bsb -clean-world",
-    "deploy": "npm run build && mkdir public && cp -r ./* public"
+    "deploy": "npm run build && rm -rf public && mkdir public && cp -r ./* public"
   },
   "dependencies": {
     "Reprocessing": "schmavery/reprocessing"
