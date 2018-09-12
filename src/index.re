@@ -4,10 +4,14 @@ type runningT =
   | Running
   | Restart;
 
+type debrisT =
+  | Narrow
+  | Wide;
+
 type stateT = {
   playerY: float,
   playerVY: float,
-  debris: list((float, float)),
+  debris: list((float, float, debrisT)),
   offsetX: float,
   running: runningT,
   sprite: imageT,
@@ -29,6 +33,7 @@ let playerWidth = 44.;
 let gravity = 600.;
 let floorY = 200.;
 let debrisWidth = 17.;
+let debrisWidthWide = 51.;
 let floorTextureWidth = 2400.;
 
 /* Get all collision boxes/coordinates for the player */
@@ -45,6 +50,7 @@ let getPlayerCollisionBoxes = playerY => [
 let generateSingleDebris = x => (
   x +. Utils.randomf(~min=200., ~max=400.),
   Utils.randomf(~min=30., ~max=50.),
+  Utils.random(~min=0, ~max=2) === 1 ? Narrow : Wide,
 );
 
 let generateInitialDebris = () => [
@@ -53,6 +59,25 @@ let generateInitialDebris = () => [
   generateSingleDebris(1100.),
   generateSingleDebris(1600.),
 ];
+
+let generateNewDebris = ({debris, offsetX, speed}) =>
+  List.map(
+    ((x, _, width) as d) =>
+      if (x
+          -. offsetX
+          +. (width === Narrow ? debrisWidth : debrisWidthWide) <= 0.) {
+        let newX =
+          List.fold_left(
+            (maxX, (x, _, _)) => max(maxX, x +. speed /. 2.),
+            0.,
+            debris,
+          );
+        generateSingleDebris(newX);
+      } else {
+        d;
+      },
+    debris,
+  );
 
 let setup = env => {
   Env.size(~width=800, ~height=300, env);
@@ -69,23 +94,6 @@ let setup = env => {
     clouds: [(500., 20.), (600., 30.), (800., 30.)],
   };
 };
-
-let generateNewDebris = ({debris, offsetX, speed}) =>
-  List.map(
-    ((x, _) as d) =>
-      if (x -. offsetX +. debrisWidth <= 0.) {
-        let newX =
-          List.fold_left(
-            (maxX, (x, _)) => max(maxX, x +. speed /. 2.),
-            0.,
-            debris,
-          );
-        generateSingleDebris(newX);
-      } else {
-        d;
-      },
-    debris,
-  );
 
 let generateSingleCloud = x => (
   x +. Utils.randomf(~min=200., ~max=800.),
@@ -165,25 +173,31 @@ let draw =
   /* Debris */
   Draw.fill(Utils.color(~r=50, ~g=50, ~b=50, ~a=0), env);
   List.iter(
-    ((x, height)) => {
-      Draw.rectf(
-        ~pos=(x -. offsetX, floorY -. height +. playerHeight),
-        ~width=debrisWidth,
-        ~height,
-        env,
-      );
-
-      Draw.subImagef(
-        sprite,
-        ~pos=(x -. offsetX, floorY -. height +. playerHeight),
-        ~width=debrisWidth,
-        ~height,
-        ~texPos=(446, 2),
-        ~texWidth=34,
-        ~texHeight=70,
-        env,
-      );
-    },
+    ((x, height, width)) =>
+      switch (width) {
+      | Narrow =>
+        Draw.subImagef(
+          sprite,
+          ~pos=(x -. offsetX, floorY -. height +. playerHeight),
+          ~width=debrisWidth,
+          ~height,
+          ~texPos=(446, 2),
+          ~texWidth=34,
+          ~texHeight=70,
+          env,
+        )
+      | Wide =>
+        Draw.subImagef(
+          sprite,
+          ~pos=(x -. offsetX, floorY -. height +. playerHeight),
+          ~width=debrisWidthWide,
+          ~height,
+          ~texPos=(850, 2),
+          ~texWidth=int_of_float(debrisWidthWide) * 2,
+          ~texHeight=100,
+          env,
+        )
+      },
     debris,
   );
 
@@ -205,7 +219,7 @@ let draw =
 
   /* Player */
   let drawRunningPlayer = () =>
-    switch (int_of_float(offsetX /. 20.) mod 2) {
+    switch (int_of_float(offsetX /. 30.) mod 2) {
     | 0 =>
       Draw.subImagef(
         sprite,
@@ -292,10 +306,14 @@ let draw =
     List.exists(
       (anatomy: anatomyT) =>
         List.exists(
-          ((x, height)) =>
+          ((x, height, width)) =>
             Utils.intersectRectRect(
               ~rect1Pos=(x -. offsetX, floorY -. height +. playerHeight),
-              ~rect1W=debrisWidth,
+              ~rect1W=
+                switch (width) {
+                | Narrow => debrisWidth
+                | Wide => debrisWidthWide
+                },
               ~rect1H=height,
               ~rect2Pos=anatomy.pos,
               ~rect2W=anatomy.width,
@@ -325,8 +343,6 @@ let draw =
   /* Draw score */
   Draw.scale(~x=0.5, ~y=0.5, env);
   Draw.text(~body=string_of_int(score), ~pos=(20, 20), env);
-
-  print_endline(string_of_float(speed));
 
   switch (running) {
   | Running => {

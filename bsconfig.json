@@ -2,15 +2,19 @@
   "name": "reprocessing-example",
   "sources": "src",
   "bs-dependencies": ["Reprocessing"],
-  "entries": [{
-    "backend": "bytecode",
-    "main-module": "IndexHot"
-  },{
-    "backend": "native",
-    "main-module": "Index"
-  },{
-    "backend": "js",
-    "main-module": "Index"
-  }],
-  "refmt": 3,
+  "entries": [
+    {
+      "backend": "bytecode",
+      "main-module": "IndexHot"
+    },
+    {
+      "backend": "native",
+      "main-module": "Index"
+    },
+    {
+      "backend": "js",
+      "main-module": "Index"
+    }
+  ],
+  "refmt": 3
 }
