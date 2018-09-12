@@ -6,12 +6,12 @@ let ws =
 
 Websocket.onOpen(ws, _ => Websocket.send(ws, "Go Time!"));
 
-let newRemoteTimeout = ref(0);
+let remoteTimeout = ref(0);
 Websocket.onMessage(
   ws,
   ev => {
     Js.log("happened");
-    newRemoteTimeout := 20;
+    remoteTimeout := 20;
   },
 );
 
@@ -428,10 +428,8 @@ let draw =
     Env.playSound(soundLevel, env);
   };
 
-  Js.log(newRemoteTimeout^);
-
-  if (newRemoteTimeout^ > 0) {
-    newRemoteTimeout := newRemoteTimeout^ - 1;
+  if (remoteTimeout^ > 0) {
+    remoteTimeout := remoteTimeout^ - 1;
   };
 
   switch (running) {
@@ -440,7 +438,7 @@ let draw =
       debris,
       playerY: min(playerY +. playerVY *. 3. *. deltaTime, floorY),
       playerVY:
-        (Env.key(Space, env) || newRemoteTimeout^ > 0) && playerY === floorY ?
+        (Env.key(Space, env) || remoteTimeout^ > 0) && playerY === floorY ?
           (-200.) : playerVY +. gravity *. deltaTime,
       offsetX: offsetX +. speed *. deltaTime,
       running: collided ? Restart : Running,
@@ -459,7 +457,7 @@ let draw =
       speed: newSpeed,
     }
   | Restart =>
-    if (Env.key(Space, env) || newRemoteTimeout^ > 0) {
+    if (Env.key(Space, env) || remoteTimeout^ > 0) {
       {
         ...state,
         debris: generateInitialDebris(),
@@ -470,7 +468,6 @@ let draw =
         score: 0,
         floorTextureOffset: (0., 0.),
         clouds: [(200., 80.), (600., 100.)],
-        remoteTimout: 0,
       };
     } else {
       state;
