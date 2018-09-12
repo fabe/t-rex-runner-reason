@@ -76,7 +76,7 @@ let generateNewDebris = ({debris, offsetX, speed}) =>
       if (x -. offsetX +. debrisWidth <= 0.) {
         let newX =
           List.fold_left(
-            (maxX, (x, _)) => max(maxX, x +. speed /. 1000.),
+            (maxX, (x, _)) => max(maxX, x +. speed /. 2.),
             0.,
             debris,
           );
@@ -98,7 +98,7 @@ let generateNewClouds = ({clouds, offsetX, speed}) =>
       if (x -. offsetX /. 4. +. 92. <= 0.) {
         let newX =
           List.fold_left(
-            (maxX, (x, _)) => max(maxX, x +. speed /. 1000.),
+            (maxX, (x, _)) => max(maxX, x +. speed /. 10.),
             0.,
             clouds,
           );
@@ -205,7 +205,7 @@ let draw =
 
   /* Player */
   let drawRunningPlayer = () =>
-    switch (int_of_float(offsetX /. 15.) mod 2) {
+    switch (int_of_float(offsetX /. 20.) mod 2) {
     | 0 =>
       Draw.subImagef(
         sprite,
@@ -326,13 +326,15 @@ let draw =
   Draw.scale(~x=0.5, ~y=0.5, env);
   Draw.text(~body=string_of_int(score), ~pos=(20, 20), env);
 
+  print_endline(string_of_float(speed));
+
   switch (running) {
   | Running => {
       ...state,
       debris,
       playerY: min(playerY +. playerVY *. 3. *. deltaTime, floorY),
       playerVY:
-        Env.keyPressed(Space, env) && playerY === floorY ?
+        Env.key(Space, env) && playerY === floorY ?
           (-200.) : playerVY +. gravity *. deltaTime,
       offsetX: offsetX +. speed *. deltaTime,
       running: collided ? Restart : Running,
@@ -348,6 +350,14 @@ let draw =
           0. : floorTextureOffsetRight +. speed *. deltaTime,
       ),
       clouds: generateNewClouds(state),
+      speed:
+        switch (score) {
+        | score when score > 100 && score < 200 => 350.
+        | score when score > 200 && score < 400 => 400.
+        | score when score > 400 && score < 500 => 450.
+        | score when score > 500 => 500.
+        | _ => 300.
+        },
     }
   | Restart =>
     if (Env.keyPressed(Space, env)) {
