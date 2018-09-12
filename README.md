@@ -6,6 +6,16 @@ The T-Rex Runner Game from Chrome written in Reason. Work in progress.
 
 ![](.github/demo.gif)
 
+## Usage
+
+```bash
+# Clone repo and cd into it, then:
+
+$ yarn install
+$ yarn build
+$ yarn start
+```
+
 ## References
 
 - [Flappy Bird in Reason](https://github.com/bsansouci/reprocessing-example/tree/livestream-flappybird)
