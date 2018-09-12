@@ -1,4 +1,29 @@
 open Reprocessing;
+open WebsocketClient;
+
+let ws =
+  Websocket.make("ws://localhost:8080", ~protocols=[|"echo-protocol"|]);
+
+Websocket.onOpen(ws, _ => Websocket.send(ws, "Go Time!"));
+
+let newRemoteTimeout = ref(0);
+Websocket.onMessage(
+  ws,
+  ev => {
+    Js.log("happened");
+    newRemoteTimeout := 20;
+  },
+);
+
+Websocket.onError(
+  ws,
+  ev => {
+    Js.log(ev);
+    Websocket.close(ws);
+  },
+);
+
+/* Websocket.onClose(ws, ev => Js.log(ev)); */
 
 type runningT =
   | Running
@@ -22,6 +47,7 @@ type stateT = {
   soundJump: soundT,
   soundLevel: soundT,
   soundCollission: soundT,
+  remoteTimout: int,
 };
 
 type anatomyT = {
@@ -98,6 +124,7 @@ let setup = env => {
     soundJump: Env.loadSound("assets/jump.wav", env),
     soundLevel: Env.loadSound("assets/level-up.wav", env),
     soundCollission: Env.loadSound("assets/collission.wav", env),
+    remoteTimout: 20,
   };
 };
 
@@ -139,6 +166,7 @@ let draw =
         soundJump,
         soundCollission,
         soundLevel,
+        remoteTimout,
       } as state,
       env,
     ) => {
@@ -400,13 +428,19 @@ let draw =
     Env.playSound(soundLevel, env);
   };
 
+  Js.log(newRemoteTimeout^);
+
+  if (newRemoteTimeout^ > 0) {
+    newRemoteTimeout := newRemoteTimeout^ - 1;
+  };
+
   switch (running) {
   | Running => {
       ...state,
       debris,
       playerY: min(playerY +. playerVY *. 3. *. deltaTime, floorY),
       playerVY:
-        Env.key(Space, env) && playerY === floorY ?
+        (Env.key(Space, env) || newRemoteTimeout^ > 0) && playerY === floorY ?
           (-200.) : playerVY +. gravity *. deltaTime,
       offsetX: offsetX +. speed *. deltaTime,
       running: collided ? Restart : Running,
@@ -425,7 +459,7 @@ let draw =
       speed: newSpeed,
     }
   | Restart =>
-    if (Env.keyPressed(Space, env)) {
+    if (Env.key(Space, env) || newRemoteTimeout^ > 0) {
       {
         ...state,
         debris: generateInitialDebris(),
@@ -436,6 +470,7 @@ let draw =
         score: 0,
         floorTextureOffset: (0., 0.),
         clouds: [(200., 80.), (600., 100.)],
+        remoteTimout: 0,
       };
     } else {
       state;

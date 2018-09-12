@@ -26,11 +26,21 @@ Tsdl@bsansouci/tsdl:
   dependencies:
     sdl2 bsansouci/SDL-mirror#fast
 
+WebsocketClient@graforlock/bs-websocket:
+  version "0.1.5"
+  resolved "https://codeload.github.com/graforlock/bs-websocket/tar.gz/721339426b8588613304e847e8e594ce9294008c"
+  dependencies:
+    bs-webapi "^0.11.0"
+
 bs-platform@bsansouci/bsb-native#3.2.0:
   version "3.2.0"
   resolved "https://codeload.github.com/bsansouci/bsb-native/tar.gz/84604c9f6a5611eed68372efdb575c00a3e72813"
   dependencies:
     yauzl "^2.9.1"
+
+bs-webapi@^0.11.0:
+  version "0.11.0"
+  resolved "https://registry.yarnpkg.com/bs-webapi/-/bs-webapi-0.11.0.tgz#b4302be75c8f4b3f88a64febd873da065924b26a"
 
 buffer-crc32@~0.2.3:
   version "0.2.13"

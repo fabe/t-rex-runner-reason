@@ -1,0 +1,9 @@
+{
+  "name": "@t-rex-runner-reason/server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "websocket": "^1.0.26"
+  }
+}

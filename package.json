@@ -9,7 +9,9 @@
     "clean": "bsb -clean-world"
   },
   "dependencies": {
-    "Reprocessing": "schmavery/reprocessing"
+    "Reprocessing": "schmavery/reprocessing",
+    "WebsocketClient": "graforlock/bs-websocket",
+    "bs-webapi": "^0.11.0"
   },
   "devDependencies": {
     "bs-platform": "bsansouci/bsb-native#3.2.0"
