@@ -4,7 +4,11 @@ The T-Rex Runner Game from Chrome written in Reason. Work in progress.
 
 > 🚨 I learned Reason through this project, don't expect high quality code.
 
-![](.github/demo.gif)
+## Demo
+
+**[Try it out online!](https://t-rex-runner-reason.netlify.com/)**
+
+[![](.github/demo.gif)](https://t-rex-runner-reason.netlify.com/)
 
 ## Usage
 
