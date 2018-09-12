@@ -1,6 +1,6 @@
 # t-rex-runner-reason
 
-The T-Rex Runner Game from Chrome written in Reason.
+The T-Rex Runner Game from Chrome written in Reason. Work in progress.
 
 > 🚨 I learned Reason through this project, don't expect high quality code.
 
