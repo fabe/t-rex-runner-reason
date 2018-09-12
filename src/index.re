@@ -19,6 +19,9 @@ type stateT = {
   speed: float,
   floorTextureOffset: (float, float),
   clouds: list((float, float)),
+  soundJump: soundT,
+  soundLevel: soundT,
+  soundCollission: soundT,
 };
 
 type anatomyT = {
@@ -92,6 +95,9 @@ let setup = env => {
     speed: 300.,
     floorTextureOffset: (0., 0.),
     clouds: [(500., 20.), (600., 30.), (800., 30.)],
+    soundJump: Env.loadSound("assets/jump.wav", env),
+    soundLevel: Env.loadSound("assets/level-up.wav", env),
+    soundCollission: Env.loadSound("assets/collission.wav", env),
   };
 };
 
@@ -130,6 +136,9 @@ let draw =
         speed,
         floorTextureOffset,
         clouds,
+        soundJump,
+        soundCollission,
+        soundLevel,
       } as state,
       env,
     ) => {
@@ -368,6 +377,29 @@ let draw =
   let debris = generateNewDebris(state);
   let deltaTime = Env.deltaTime(env);
 
+  /* Calculate new speed (level up) */
+  let newSpeed =
+    switch (score) {
+    | score when score > 100 && score < 200 => 350.
+    | score when score > 200 && score < 400 => 400.
+    | score when score > 400 && score < 500 => 450.
+    | score when score > 500 => 500.
+    | _ => 300.
+    };
+
+  /* Play Sounds */
+  if (running === Running && Env.key(Space, env) && playerY === floorY) {
+    Env.playSound(soundJump, env);
+  };
+
+  if (collided && running === Running) {
+    Env.playSound(soundCollission, env);
+  };
+
+  if (newSpeed > speed) {
+    Env.playSound(soundLevel, env);
+  };
+
   switch (running) {
   | Running => {
       ...state,
@@ -390,14 +422,7 @@ let draw =
           0. : floorTextureOffsetRight +. speed *. deltaTime,
       ),
       clouds: generateNewClouds(state),
-      speed:
-        switch (score) {
-        | score when score > 100 && score < 200 => 350.
-        | score when score > 200 && score < 400 => 400.
-        | score when score > 400 && score < 500 => 450.
-        | score when score > 500 => 500.
-        | _ => 300.
-        },
+      speed: newSpeed,
     }
   | Restart =>
     if (Env.keyPressed(Space, env)) {
