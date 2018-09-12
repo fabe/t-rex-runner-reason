@@ -68,7 +68,7 @@ let generateNewDebris = ({debris, offsetX, speed}) =>
           +. (width === Narrow ? debrisWidth : debrisWidthWide) <= 0.) {
         let newX =
           List.fold_left(
-            (maxX, (x, _, _)) => max(maxX, x +. speed /. 2.),
+            (maxX, (x, _, _)) => max(maxX, x +. speed /. 4.),
             0.,
             debris,
           );
@@ -199,6 +199,34 @@ let draw =
         )
       },
     debris,
+  );
+
+  /* Scores */
+  let drawDigit = (~digit, ~pos) =>
+    Draw.subImage(
+      sprite,
+      ~pos,
+      ~width=10,
+      ~height=12,
+      ~texPos=(1294 + digit * 20, 2),
+      ~texWidth=20,
+      ~texHeight=23,
+      env,
+    );
+
+  let scoreString = ref(string_of_int(score));
+  while (String.length(scoreString^) < 5) {
+    scoreString := "0" ++ scoreString^;
+    ();
+  };
+
+  String.iteri(
+    (i, c) =>
+      drawDigit(
+        ~digit=int_of_string(String.make(1, c)),
+        ~pos=(Env.width(env) - 5 * 11 + i * 12 - 20, 20),
+      ),
+    scoreString^,
   );
 
   /* Clouds */
@@ -339,10 +367,6 @@ let draw =
 
   let debris = generateNewDebris(state);
   let deltaTime = Env.deltaTime(env);
-
-  /* Draw score */
-  Draw.scale(~x=0.5, ~y=0.5, env);
-  Draw.text(~body=string_of_int(score), ~pos=(20, 20), env);
 
   switch (running) {
   | Running => {
