@@ -6,6 +6,7 @@ let ws =
 
 Websocket.onOpen(ws, _ => Websocket.send(ws, "Go Time!"));
 
+let restartTimeout = ref(0);
 let remoteTimeout = ref(0);
 Websocket.onMessage(
   ws,
@@ -422,6 +423,7 @@ let draw =
 
   if (collided && running === Running) {
     Env.playSound(soundCollission, env);
+    restartTimeout := 50;
   };
 
   if (newSpeed > speed) {
@@ -430,6 +432,10 @@ let draw =
 
   if (remoteTimeout^ > 0) {
     remoteTimeout := remoteTimeout^ - 1;
+  };
+
+  if (restartTimeout^ > 0) {
+    restartTimeout := restartTimeout^ - 1;
   };
 
   switch (running) {
@@ -457,7 +463,7 @@ let draw =
       speed: newSpeed,
     }
   | Restart =>
-    if (Env.key(Space, env) || remoteTimeout^ > 0) {
+    if ((Env.key(Space, env) || remoteTimeout^ > 0) && restartTimeout^ === 0) {
       {
         ...state,
         debris: generateInitialDebris(),
