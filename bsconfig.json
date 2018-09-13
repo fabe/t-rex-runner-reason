@@ -1,7 +1,7 @@
 {
   "name": "reprocessing-example",
   "sources": "src",
-  "bs-dependencies": ["Reprocessing", "bs-webapi"],
+  "bs-dependencies": ["Reprocessing", "bs-webapi", "bs-fetch"],
   "entries": [
     {
       "backend": "bytecode",

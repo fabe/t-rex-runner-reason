@@ -24,6 +24,13 @@ Websocket.onError(
   },
 );
 
+let highscore = ref("");
+Js.Promise.(
+  Fetch.fetch("http://localhost:8080/get")
+  |> then_(Fetch.Response.text)
+  |> then_(text => (highscore := Js.String.split(",", text)[1]) |> resolve)
+);
+
 /* Websocket.onClose(ws, ev => Js.log(ev)); */
 
 type runningT =
@@ -267,6 +274,35 @@ let draw =
     scoreString^,
   );
 
+  /* Highscore */
+  let highscoreString = ref(highscore^);
+  while (String.length(highscoreString^) < 5) {
+    highscoreString := "0" ++ highscoreString^;
+    ();
+  };
+
+  Draw.tint(Utils.color(~r=0, ~g=0, ~b=0, ~a=100), env);
+  String.iteri(
+    (i, c) =>
+      drawDigit(
+        ~digit=int_of_string(String.make(1, c)),
+        ~pos=(Env.width(env) - 5 * 11 + i * 12 - 10 * 11, 20),
+      ),
+    highscoreString^,
+  );
+
+  Draw.subImage(
+    sprite,
+    ~pos=(Env.width(env) - 5 * 11 + 5 * 12 - 10 * 11, 20),
+    ~width=38 / 2,
+    ~height=12,
+    ~texPos=(1494, 2),
+    ~texWidth=38,
+    ~texHeight=23,
+    env,
+  );
+  Draw.noTint(env);
+
   /* Clouds */
   List.iter(
     ((x, y)) =>
@@ -424,6 +460,19 @@ let draw =
   if (collided && running === Running) {
     Env.playSound(soundCollission, env);
     restartTimeout := 50;
+
+    if (score > int_of_string(highscore^)) {
+      let _ =
+        Js.Promise.(
+          Fetch.fetchWithInit(
+            "http://localhost:8080/set?name=anon&score="
+            ++ string_of_int(score),
+            Fetch.RequestInit.make(~method_=Get, ()),
+          )
+        );
+      ();
+      highscore := string_of_int(score);
+    };
   };
 
   if (newSpeed > speed) {
