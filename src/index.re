@@ -4,31 +4,33 @@ open WebsocketClient;
 let ws =
   Websocket.make("ws://localhost:8080", ~protocols=[|"echo-protocol"|]);
 
-Websocket.onOpen(ws, _ => Websocket.send(ws, "Go Time!"));
+Websocket.onOpen(ws, _ => Websocket.send(ws, "alexmeier14"));
 
 let restartTimeout = ref(0);
 let remoteTimeout = ref(0);
+let name = ref("Anon");
 Websocket.onMessage(
   ws,
   ev => {
-    Js.log("happened");
+    name := WebsocketClient.MessageEvent.data(ev);
     remoteTimeout := 20;
   },
 );
 
-Websocket.onError(
-  ws,
-  ev => {
-    Js.log(ev);
-    Websocket.close(ws);
-  },
-);
+Websocket.onError(ws, ev => Websocket.close(ws));
 
 let highscore = ref("");
+let leader = ref("");
 Js.Promise.(
   Fetch.fetch("http://localhost:8080/get")
   |> then_(Fetch.Response.text)
-  |> then_(text => (highscore := Js.String.split(",", text)[1]) |> resolve)
+  |> then_(text =>
+       {
+         highscore := Js.String.split(",", text)[1];
+         leader := Js.String.split(",", text)[0];
+       }
+       |> resolve
+     )
 );
 
 /* Websocket.onClose(ws, ev => Js.log(ev)); */
@@ -439,6 +441,12 @@ let draw =
     getPlayerCollisionBoxes(playerY),
   );
 
+  /* Leaderboard */
+  Draw.scale(~x=0.5, ~y=0.5, env);
+  let leaderString =
+    String.length(leader^) > 0 ? "Current Leader: " ++ leader^ : "";
+  Draw.text(~body=leaderString, ~pos=(20, 20), env);
+
   let debris = generateNewDebris(state);
   let deltaTime = Env.deltaTime(env);
 
@@ -465,12 +473,15 @@ let draw =
       let _ =
         Js.Promise.(
           Fetch.fetchWithInit(
-            "http://localhost:8080/set?name=anon&score="
+            "http://localhost:8080/set?name="
+            ++ name^
+            ++ "&score="
             ++ string_of_int(score),
             Fetch.RequestInit.make(~method_=Get, ()),
           )
         );
       ();
+      leader := name^;
       highscore := string_of_int(score);
     };
   };

@@ -33,17 +33,26 @@
 
 <body>
 
+  <input type="text" placeholder="Nick" id="name">
   <div>Tap</div>
 
   <script>
     var ws = new WebSocket("ws://192.168.128.110:8080", "echo-protocol");
 
+    document.getElementById('name').addEventListener('touchstart', (e) => {
+      e.stopPropagation()
+    }, false);
+
+    document.getElementById('name').addEventListener('click', (e) => {
+      e.stopPropagation()
+    }, false);
+
     document.body.addEventListener('touchstart', () => {
-      ws.send('GO');
+      ws.send(document.getElementById('name').value || 'Anon');
     }, false);
 
     document.body.addEventListener("click", () => {
-      ws.send('GO');
+      ws.send(document.getElementById('name').value || 'Anon');
     }, false);
   </script>
 </body>

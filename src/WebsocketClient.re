@@ -6,7 +6,7 @@ module MessageEvent = {
     type nonrec t = t;
   });
 
-  [@bs.get] external data: t => data('a) = "data";
+  [@bs.get] external data: t => string = "data";
   [@bs.get] external type_: t => string = "type";
 };
 
